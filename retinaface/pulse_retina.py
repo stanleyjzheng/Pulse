@@ -1,3 +1,6 @@
+'''
+    Apologies for the messy code - 'tis a hackathon afterall.
+'''
 from retinaface.model import Detector
 import numpy as np
 import time
@@ -56,8 +59,6 @@ class PulseMonitor(object):
         self.data_buffer, self.times = [], []
         self.plot_title = "Data Display"
 
-
-
     def plotXY(self, data, size=(280,640), margin=25, name="data", labels=[], skip=[],
             showmax=[], bg=None, label_ndigits=[], showmax_digits=[]):
         
@@ -71,6 +72,7 @@ class PulseMonitor(object):
         
         z = np.zeros((size[0],size[1],3))
         
+        # face overlay
         if isinstance(bg,np.ndarray):
             wd = int(bg.shape[1]/bg.shape[0]*h )
             bg = cv2.resize(bg,(wd,int(h)))
@@ -141,10 +143,11 @@ class PulseMonitor(object):
                showmax_digits=[0, 1],
                skip=[3, 3],
                name=self.plot_title,
-               bg=self.slices[0])
+               bg=None) # bg=self.slices[0]
         
         if graph is not None:
-            graph = cv2.resize(graph, (256, 256))
+            w, h, _ = np.shape(graph)
+            graph = cv2.resize(graph, (int(h/2), int(w/2)))
             return graph
 
     def shift(self, detected):
@@ -273,10 +276,9 @@ class PulseMonitor(object):
             tsize = 1
             cv2.putText(self.frame_out, text, (int(x - w / 2), int(y)), cv2.FONT_HERSHEY_PLAIN, tsize, col)
 
-        plot = self.make_plot()
-
-        _h, _w, _c = np.shape(plot)
-        self.frame_out[:_h, :_w, :_c] = plot
+            plot = self.make_plot()
+            _h, _w, _c = np.shape(plot)
+            self.frame_out[-_h:, :_w, :_c] = plot
 
 
 if __name__ == "__main__":
