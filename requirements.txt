@@ -6,3 +6,7 @@ opencv_python==4.5.1.48
 streamlit==0.74.1
 streamlit_webrtc
 matplotlib
+
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.7.1+cpu
+torchvision==0.8.2+cpu
