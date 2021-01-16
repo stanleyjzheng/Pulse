@@ -3,6 +3,7 @@ import av
 import cv2
 import PIL
 import time
+import traceback
 import numpy as np
 import streamlit as st
 from pathlib import Path
@@ -41,7 +42,9 @@ def plot_bpm(bpm):
         'x': x,
         'y': y
     })
-    return alt.Chart(source).mark_line().encode(x=alt.X('x',axis=alt.Axis(title='Time (s)'), y=alt.Y('y',axis=alt.Axis(title='BPM'))).properties(width=650, height=400))
+    return alt.Chart(source).mark_line().encode(
+        x=alt.X('x',axis=alt.Axis(title='Time (s)'), 
+        y=alt.Y('y',axis=alt.Axis(title='BPM')))).properties(width=650, height=400)
 
 def get_pulsemonitor_frames():
     class NNVideoTransformer(VideoTransformerBase):
@@ -50,18 +53,23 @@ def get_pulsemonitor_frames():
             self.bpm = []
 
         def transform(self, frame: av.VideoFrame) -> np.ndarray:
-            image = frame.to_ndarray(format="bgr24")
-            annotated_image, current_bpm = self.processor.process_frame(image)
-            self.bpm.append(current_bpm)
-            thread = current_thread()
-            if getattr(thread, KEY_CONTEXT, None) is None:
-                setattr(thread, KEY_CONTEXT, main_context)
-            if len(self.bpm) % 10 == 0:
-                bars = plot_bpm(self.bpm)
-                time.sleep(0.01)
-                bar_plot.altair_chart(bars)
-
-            return annotated_image
+            try:
+                image = frame.to_ndarray(format="bgr24")
+                annotated_image, current_bpm = self.processor.process_frame(image)
+                self.bpm.append(current_bpm)
+                ''' temp disable
+                thread = current_thread()
+                if getattr(thread, KEY_CONTEXT, None) is None:
+                    setattr(thread, KEY_CONTEXT, main_context)
+                if len(self.bpm) % 10 == 0:
+                    bars = plot_bpm(self.bpm)
+                    time.sleep(0.01)
+                    bar_plot.altair_chart(bars)
+                '''
+                return annotated_image
+            except Exception as e:
+                traceback.print_exc()
+                return image
 
     webrtc_ctx = webrtc_streamer(key="loopback", mode=WebRtcMode.SENDRECV, client_settings=WEBRTC_CLIENT_SETTINGS, video_transformer_factory=NNVideoTransformer, async_transform=True,)
 
