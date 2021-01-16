@@ -53,12 +53,8 @@ def get_pulsemonitor_frames():
             image = frame.to_ndarray(format="bgr24")
             annotated_image, current_bpm = self.processor.process_frame(image)
             self.bpm.append(current_bpm)
-            thread = current_thread()
-            if getattr(thread, KEY_CONTEXT, None) is None:
-                setattr(thread, KEY_CONTEXT, main_context)
             if len(self.bpm) % 10 == 0:
                 bars = plot_bpm(self.bpm)
-                time.sleep(0.01)
                 bar_plot.altair_chart(bars)
 
             return annotated_image
