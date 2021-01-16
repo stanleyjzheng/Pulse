@@ -56,21 +56,18 @@ def get_pulsemonitor_frames():
             try:
                 image = frame.to_ndarray(format="bgr24")
                 annotated_image, current_bpm = self.processor.process_frame(image)
-                self.bpm.append(current_bpm)
-                ''' temp disable
-                thread = current_thread()
-                if getattr(thread, KEY_CONTEXT, None) is None:
-                    setattr(thread, KEY_CONTEXT, main_context)
-                if len(self.bpm) % 10 == 0:
-                    bars = plot_bpm(self.bpm)
-                    time.sleep(0.01)
-                    bar_plot.altair_chart(bars)
-                '''
+                try:
+                    self.bpm.append(current_bpm)
+                    if len(self.bpm) % 10 == 0:
+                        bars = plot_bpm(self.bpm)
+                        bar_plot.altair_chart(bars)
+                except Exception as e:
+                    traceback.print_exc()
+                    return annotated_image
                 return annotated_image
             except Exception as e:
                 traceback.print_exc()
                 return image
-
     webrtc_ctx = webrtc_streamer(key="loopback", mode=WebRtcMode.SENDRECV, client_settings=WEBRTC_CLIENT_SETTINGS, video_transformer_factory=NNVideoTransformer, async_transform=True,)
 
 WEBRTC_CLIENT_SETTINGS = ClientSettings(
