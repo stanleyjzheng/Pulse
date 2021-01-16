@@ -11,15 +11,9 @@ from pathlib import Path
 from aiortc.contrib.media import MediaPlayer
 from retinaface.pulse_retina import PulseMonitor
 
-from streamlit_webrtc import (
-    ClientSettings,
-    VideoTransformerBase,
-    WebRtcMode,
-    webrtc_streamer,
-)
+from streamlit_webrtc import ClientSettings, VideoTransformerBase, WebRtcMode, webrtc_streamer
 
 HERE = Path(__file__).parent
-
 
 def main():
     st.header("WebRTC demo")
@@ -58,7 +52,7 @@ def get_pulsemonitor_frames():
 
         def transform(self, frame: av.VideoFrame) -> np.ndarray:
             image = frame.to_ndarray(format="bgr24")
-            annotated_image = processor.process_frame(image)
+            annotated_image = self.processor.process_frame(image)
             return annotated_image
 
     webrtc_ctx = webrtc_streamer(key="loopback", mode=WebRtcMode.SENDRECV, client_settings=WEBRTC_CLIENT_SETTINGS, video_transformer_factory=NNVideoTransformer, async_transform=True,)
