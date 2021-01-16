@@ -35,7 +35,7 @@ def main():
     get_pulsemonitor_frames()
 
 def plot_bpm(bpm):
-    x = np.arange(min([100, len(bpm)])[0])
+    x = np.arange(min([100, len(bpm)]))
     y = bpm[-100:] if len(bpm)>100 else bpm
     source = pd.DataFrame({
         'x': x,
