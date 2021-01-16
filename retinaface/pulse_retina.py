@@ -1,4 +1,4 @@
-from model import Detector
+from retinaface.model import Detector
 import numpy as np
 import time
 import cv2
@@ -84,7 +84,7 @@ class PulseMonitor(object):
                 self.face_rect = list(map(int, [detected[0][0], detected[0][1], w, h]))
 
         forehead1 = self.get_subface_coord(0.5, 0.18, 0.25, 0.15)
-        self.draw_rect(self.face_rect, col=(255, 0, 0))
+        self.draw_rect(self.face_rect, col=(100, 255, 100))
         x, y, w, h = self.face_rect
         self.draw_rect(forehead1)
         x, y, w, h = forehead1
