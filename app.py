@@ -11,15 +11,9 @@ from pathlib import Path
 from aiortc.contrib.media import MediaPlayer
 from retinaface.pulse_retina import PulseMonitor
 
-from streamlit_webrtc import (
-    ClientSettings,
-    VideoTransformerBase,
-    WebRtcMode,
-    webrtc_streamer,
-)
+from streamlit_webrtc import ClientSettings, VideoTransformerBase, WebRtcMode, webrtc_streamer
 
 HERE = Path(__file__).parent
-
 
 def main():
     st.header("WebRTC demo")
