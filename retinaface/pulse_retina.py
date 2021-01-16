@@ -167,9 +167,7 @@ if __name__ == "__main__":
             break
         
         try:
-            processor.frame_in = frame
-            processor.run()
-            output_frame = processor.frame_out
+            output_frame = processor.process_frame(frame)
         except:
             pass # I know this is silly shhh
 

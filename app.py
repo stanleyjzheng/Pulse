@@ -1,15 +1,15 @@
 
-from pathlib import Path
 
 import os
 import av
 import cv2
-import numpy as np
 import PIL
-import streamlit as st
-from aiortc.contrib.media import MediaPlayer
 import time
-
+import numpy as np
+import streamlit as st
+from pathlib import Path
+from aiortc.contrib.media import MediaPlayer
+from retinaface.pulse_retina import PulseMonitor
 
 from streamlit_webrtc import (
     ClientSettings,
@@ -17,8 +17,6 @@ from streamlit_webrtc import (
     WebRtcMode,
     webrtc_streamer,
 )
-
-from retinaface.pulse_retina import PulseMonitor
 
 HERE = Path(__file__).parent
 
@@ -50,6 +48,7 @@ def app_loopback():
         video_transformer_factory=None,  # NoOp
     )
 
+
 def get_pulsemonitor_frames():
 
     class NNVideoTransformer(VideoTransformerBase):
@@ -59,13 +58,11 @@ def get_pulsemonitor_frames():
 
         def transform(self, frame: av.VideoFrame) -> np.ndarray:
             image = frame.to_ndarray(format="bgr24")
-            self.processor.frame_in = image
-            self.processor.run()
-            annotated_image = self.processor.frame_out
-
+            annotated_image = processor.process_frame(image)
             return annotated_image
 
     webrtc_ctx = webrtc_streamer(key="loopback", mode=WebRtcMode.SENDRECV, client_settings=WEBRTC_CLIENT_SETTINGS, video_transformer_factory=NNVideoTransformer, async_transform=True,)
+
 
 WEBRTC_CLIENT_SETTINGS = ClientSettings(
     rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
