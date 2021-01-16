@@ -453,7 +453,7 @@ class Detector:
         self.resize = 1.0
 
         self.net = RetinaFace(cfg=self.cfg, phase='test')
-        self.net = load_model(self.net, os.path.join(os.path.dirname(__file__), "mobilenet0.25_Final.pth"), False)
+        self.net = load_model(self.net, os.path.join(os.path.dirname(__file__), "mobilenet0.25_Final.pth"), False if torch.cuda.is_available() else True)
         self.net.eval()
         
 

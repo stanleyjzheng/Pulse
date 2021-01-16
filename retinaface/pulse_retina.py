@@ -67,7 +67,7 @@ class PulseMonitor(object):
     def process_frame(self, frame):
         self.frame_in = frame
         self.run()
-        return self.frame_out
+        return self.frame_out, self.bpm
 
     def run(self):
         self.times.append(time.time() - self.t0)
