@@ -83,6 +83,13 @@ class PulseMonitor(object):
             if self.shift(detected[0][:4]) > 4:
                 self.face_rect = list(map(int, [detected[0][0], detected[0][1], w, h]))
 
+            b = list(map(int, detected[0]))
+            cv2.circle(self.frame_out, (b[5], b[6]), 1, (0, 0, 255), 4) # left eye
+            cv2.circle(self.frame_out, (b[7], b[8]), 1, (0, 255, 255), 4) # right eye
+            cv2.circle(self.frame_out, (b[9], b[10]), 1, (255, 0, 255), 4) # nose
+            cv2.circle(self.frame_out, (b[11], b[12]), 1, (0, 255, 0), 4) # left mouth
+            cv2.circle(self.frame_out, (b[13], b[14]), 1, (255, 0, 0), 4) # right mouth
+
         forehead1 = self.get_subface_coord(0.5, 0.18, 0.25, 0.15)
         self.draw_rect(self.face_rect, col=(100, 255, 100))
         x, y, w, h = self.face_rect
