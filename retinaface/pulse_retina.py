@@ -3,6 +3,7 @@
 '''
 from retinaface.model import Detector
 import numpy as np
+import traceback
 import time
 import cv2
 import pylab
@@ -293,8 +294,8 @@ if __name__ == "__main__":
         
         try:
             output_frame = processor.process_frame(frame)
-        except:
-            pass # I know this is silly shhh
+        except Exception as e:
+            traceback.print_exc()
 
         cv2.imshow("Frame", output_frame)
         cv2.waitKey(1)
