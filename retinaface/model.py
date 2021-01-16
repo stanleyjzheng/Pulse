@@ -17,9 +17,9 @@ import torch.backends.cudnn as cudnn
 import torchvision.models._utils as _utils
 import torchvision.models.detection.backbone_utils as backbone_utils
 
-# Demo face detection with retinaface (hacked together from https://github.com/biubug6/Pytorch_Retinaface by @Greg-Tarr)
+# Demo face detection with retinaface (modified by @Greg-Tarr heavily from https://github.com/biubug6/Pytorch_Retinaface)
 # cd ./demo_retinaface
-# python3 demo.py
+# python3 model.py
 # (requires pytorch with gpu)
 
 cfg_mnet = {
@@ -445,58 +445,54 @@ def load_model(model, pretrained_path, load_to_cpu):
     return model
 
 
-if __name__ == '__main__':
-    torch.set_grad_enabled(False)
-    cfg = cfg_mnet
+class Detector:
 
-    net = RetinaFace(cfg=cfg, phase='test')
-    net = load_model(net, os.path.join(os.path.dirname(__file__), "mobilenet0.25_Final.pth"), False)
-    net.eval()
+    def __init__(self):
+        torch.set_grad_enabled(False)
+        self.cfg = cfg_mnet
+        self.resize = 1.0
 
-    print('Finished loading model!')
-    print(net)
+        self.net = RetinaFace(cfg=self.cfg, phase='test')
+        self.net = load_model(self.net, os.path.join(os.path.dirname(__file__), "mobilenet0.25_Final.pth"), False)
+        self.net.eval()
+        
 
-    cudnn.benchmark = True
-    device = torch.device("cpu" if False else "cuda")
-    net = net.to(device)
+        print('Finished loading model!')
+        print(self.net)
 
-    cap = cv2.VideoCapture(0)
+        cudnn.benchmark = True
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.net = self.net.to(self.device)
 
-    resize = 1
-    while True:
-        image_path = "./curve/test.jpg"
-        ret, img_raw = cap.read()
-        if not ret:
-            break
+    def __call__(self, img_raw):
 
         img = np.float32(img_raw)
-
         im_height, im_width, _ = img.shape
         scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
         img -= (104, 117, 123)
         img = img.transpose(2, 0, 1)
         img = torch.from_numpy(img).unsqueeze(0)
-        img = img.to(device)
-        scale = scale.to(device)
+        img = img.to(self.device)
+        scale = scale.to(self.device)
 
         tic = time.time()
-        loc, conf, landms = net(img)  # forward pass
+        loc, conf, landms = self.net(img)  # forward pass
         print('net forward time: {:.4f}'.format(time.time() - tic))
 
-        priorbox = PriorBox(cfg, image_size=(im_height, im_width))
+        priorbox = PriorBox(self.cfg, image_size=(im_height, im_width))
         priors = priorbox.forward()
-        priors = priors.to(device)
+        priors = priors.to(self.device)
         prior_data = priors.data
-        boxes = decode(loc.data.squeeze(0), prior_data, cfg['variance'])
-        boxes = boxes * scale / resize
+        boxes = decode(loc.data.squeeze(0), prior_data, self.cfg['variance'])
+        boxes = boxes * scale / self.resize
         boxes = boxes.cpu().numpy()
         scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
-        landms = decode_landm(landms.data.squeeze(0), prior_data, cfg['variance'])
+        landms = decode_landm(landms.data.squeeze(0), prior_data, self.cfg['variance'])
         scale1 = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                 img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                 img.shape[3], img.shape[2]])
-        scale1 = scale1.to(device)
-        landms = landms * scale1 / resize
+        scale1 = scale1.to(self.device)
+        landms = landms * scale1 / self.resize
         landms = landms.cpu().numpy()
 
         # ignore low scores
@@ -524,6 +520,21 @@ if __name__ == '__main__':
 
         dets = np.concatenate((dets, landms), axis=1)
 
+        return dets
+
+if __name__ == '__main__':
+    # intialize detector & camera stream
+    detector = Detector()
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        ret, img_raw = cap.read()
+        if not ret:
+            break
+        
+        # model inference
+        dets = detector(img_raw)
+
         # show image
         if True:
             for b in dets:
@@ -534,15 +545,24 @@ if __name__ == '__main__':
                 cv2.rectangle(img_raw, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 2)
                 cx = b[0]
                 cy = b[1] + 12
-                cv2.putText(img_raw, text, (cx, cy),
-                            cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 255))
+                cv2.putText(img_raw, text, (cx, cy), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 255))
 
                 # landms
-                cv2.circle(img_raw, (b[5], b[6]), 1, (0, 0, 255), 4)
-                cv2.circle(img_raw, (b[7], b[8]), 1, (0, 255, 255), 4)
-                cv2.circle(img_raw, (b[9], b[10]), 1, (255, 0, 255), 4)
-                cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4)
-                cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
-            
-            cv2.imshow("Detections", img_raw)
+                cv2.circle(img_raw, (b[5], b[6]), 1, (0, 0, 255), 4) # left eye
+                cv2.circle(img_raw, (b[7], b[8]), 1, (0, 255, 255), 4) # right eye
+                cv2.circle(img_raw, (b[9], b[10]), 1, (255, 0, 255), 4) # nose
+                cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4) # left mouth
+                cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4) # right mouth
+
+                # forhead
+                foreheadx = int((b[5] + b[7]) / 2)
+                foreheady = int((((b[6] + b[8]) / 2) + b[1]) / 2) # average eyeheight + half distance to top
+                cv2.circle(img_raw, (foreheadx, foreheady), 1, (255, 255, 255), 4) # right mouth
+
+                forehead_size = abs(b[7] - b[5]) / 3
+                forehead = [(int(foreheadx - forehead_size), int(foreheady - forehead_size)),
+                           (int(foreheadx + forehead_size), int(foreheady + forehead_size))]
+                cv2.rectangle(img_raw, forehead[0], forehead[1], (255, 255, 255), 2)
+
+            cv2.imshow("img_raw", img_raw)
             cv2.waitKey(1)

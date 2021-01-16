@@ -1,3 +1,4 @@
+from model import Detector
 import numpy as np
 import time
 import cv2
@@ -23,10 +24,8 @@ class PulseMonitor(object):
         self.t0 = time.time()
         self.bpms = []
         self.bpm = 0
-        dpath = "haarcascade_frontalface_alt.xml"
-        if not os.path.exists(dpath):
-            print("Cascade file not present!")
-        self.face_cascade = cv2.CascadeClassifier(dpath)
+
+        self.face_detector = Detector()
 
         self.face_rect = [1, 1, 2, 2]
         self.last_center = np.array([0, 0])
@@ -75,13 +74,15 @@ class PulseMonitor(object):
         self.frame_out = self.frame_in
         self.gray = cv2.equalizeHist(cv2.cvtColor(self.frame_in, cv2.COLOR_BGR2GRAY))
         col = (100, 255, 100)
-        detected = list(self.face_cascade.detectMultiScale(self.gray,scaleFactor=1.3,minNeighbors=4,minSize=(50, 50),flags=cv2.CASCADE_SCALE_IMAGE))
-        print(detected)
-        if len(detected) > 0:
-            detected.sort(key=lambda a: a[-1] * a[-2])
 
-            if self.shift(detected[-1]) > 4:
-                self.face_rect = detected[-1]
+        detected = self.face_detector(self.frame_in).tolist()
+
+        if len(detected) > 0:
+            w = int(detected[0][2] - detected[0][0])
+            h = int(detected[0][3] - detected[0][1])
+            if self.shift(detected[0][:4]) > 4:
+                self.face_rect = list(map(int, [detected[0][0], detected[0][1], w, h]))
+
         forehead1 = self.get_subface_coord(0.5, 0.18, 0.25, 0.15)
         self.draw_rect(self.face_rect, col=(255, 0, 0))
         x, y, w, h = self.face_rect
@@ -170,7 +171,7 @@ if __name__ == "__main__":
             processor.run()
             output_frame = processor.frame_out
         except:
-            pass
+            pass # I know this is silly shhh
 
         cv2.imshow("Frame", output_frame)
         cv2.waitKey(1)
