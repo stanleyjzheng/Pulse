@@ -9,11 +9,26 @@ from streamlit_webrtc import ClientSettings, VideoTransformerBase, WebRtcMode, w
 
 
 def main():
-    st.header("Pulse detector demo")
+    st.set_page_config(page_title="Pulse", page_icon="assets/favicon.png", initial_sidebar_state="collapsed")
+    st.image("assets/favicon.png")
+    st.markdown("<style> .reportview-container .main footer {visibility: hidden;}    #MainMenu {visibility: hidden;}</style>", unsafe_allow_html=True)
     get_pulsemonitor_frames()
 
+
+def app_loopback():
+    """ Simple video loopback """
+    webrtc_streamer(
+        key="loopback",
+        mode=WebRtcMode.SENDRECV,
+        client_settings=WEBRTC_CLIENT_SETTINGS,
+        video_transformer_factory=None,  # NoOp
+    )
+
+
 def get_pulsemonitor_frames():
+
     class NNVideoTransformer(VideoTransformerBase):
+
         def __init__(self) -> None:
             self.processor = PulseMonitor()
 
@@ -28,6 +43,7 @@ def get_pulsemonitor_frames():
                 return image
     
     webrtc_ctx = webrtc_streamer(key="loopback", mode=WebRtcMode.SENDRECV, client_settings=WEBRTC_CLIENT_SETTINGS, video_transformer_factory=NNVideoTransformer, async_transform=True,)
+
 
 WEBRTC_CLIENT_SETTINGS = ClientSettings(
     rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
