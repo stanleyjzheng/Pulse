@@ -37,7 +37,7 @@ Video Heartrate Monitor
 ```
 
 Heart rate is a crucial metric; a high heart rate can mean or a low heart rate can mean . 
-For many, it's a great way to understand how extraneous excercise is. 
+For many, it's a great way to understand how extraneous exercise is. 
 Traditional heart rate monitoring is done through an optical sensor on the back of a smart watch, or through a chest strap. 
 However, the accuracy and reliability of optical heart rate measurement varies from person to person and may not work at all with certain types of activities or sports. 
 Currently, the best wrist heart rate measurements stay 80% of the time within 10% of the chest-measured heart rate. 
@@ -57,6 +57,13 @@ If you're just looking for a high-level overview of your heart rate, it's hard t
 
 This technology brings other benefits in the form of group monitoring. No longer does a fitness instructor have to guess if a large cohort is being excercised; thorough group pulse monitoring, a more tailor-made program is possible. 
 
-Greg: Talk about some technical details
+Greg: 
+
+This can be done using a face detector to crop a region of the forehead out from a live webcam feed. This patch of skin is then analysed for repetitions that are indicative of a heartbeat. 
+
+Our system uses the RetinaFace mobilenet face detector as it is extremely fast while being incredibly robust. This fast face detector also runs real-time on an 8 core CPU. This pipeline was deployed as a streamlit webpage which uses WebRTC to transmit frames to the server which processes the stream.
+
+Here is an example:
+
 
 Do a demo at the end
