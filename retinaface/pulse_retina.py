@@ -242,8 +242,8 @@ class PulseMonitor(object):
             #idx = np.where(idx < self.fft.shape)
             pruned = np.take(self.fft, idx, mode='clip')[0]
             
-            phase = phase[idx]
-            pfreq = freqs[idx]
+            phase = np.take(phase, idx, mode='clip')[0]
+            pfreq = np.take(freqs, idx, mode='clip')[0]
             self.freqs = pfreq
             self.fft = pruned
             idx2 = np.argmax(pruned)
