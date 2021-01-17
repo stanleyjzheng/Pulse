@@ -240,7 +240,7 @@ class PulseMonitor(object):
             idx = np.where((freqs > 50) & (freqs < 180))
             idx = (np.array(np.clip(idx[0], 0, np.amax(self.fft))).astype(np.int64),)
             #idx = np.where(idx < self.fft.shape)
-            pruned = np.take(self.fft, idx)[0]
+            pruned = np.take(self.fft, idx, mode='clip')[0]
             
             phase = phase[idx]
             pfreq = freqs[idx]
