@@ -36,8 +36,8 @@ Video Heartrate Monitor
 /> streamlit run app.py
 ```
 
-Heart rate is a crucial metric; a high heart rate can mean or a low heart rate can mean . 
-For many, it's a great way to understand how extraneous exercise is. 
+Heart rate is a crucial metric; a high heart rate can indicate anemia or acrdiomyopathy, and a low heart rate can mean hypothyroidism or heart disease. 
+However, for most, it's a great way to understand how extraneous exercise is.
 Traditional heart rate monitoring is done through an optical sensor on the back of a smart watch, or through a chest strap. 
 However, the accuracy and reliability of optical heart rate measurement varies from person to person and may not work at all with certain types of activities or sports. 
 Currently, the best wrist heart rate measurements stay 80% of the time within 10% of the chest-measured heart rate. 
