@@ -189,7 +189,7 @@ class PulseMonitor(object):
         if len(detected) > 0:
             w = int(detected[0][2] - detected[0][0])
             h = int(detected[0][3] - detected[0][1])
-            if self.shift(detected[0][:4]) > 10:
+            if self.shift(detected[0][:4]) > 4:
                 self.face_rect = list(map(int, [detected[0][0], detected[0][1], w, h]))
 
             b = list(map(int, detected[0]))
