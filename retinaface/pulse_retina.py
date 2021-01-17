@@ -120,18 +120,12 @@ class PulseMonitor(object):
                 i+=1
                 P.append(pts)
             except ValueError:
-                pass #temporary
-        """ 
-        #Polylines seems to have some trouble rendering multiple polys for some people
-        for p in P:
-            cv2.polylines(z, [p], False, (255,255,255),1)
-        """
-        #hack-y alternative:
+                pass
+
+        # hack-y:
         for p in P:
             for i in range(len(p)-1):
                 cv2.line(z,tuple(p[i]),tuple(p[i+1]), (255,255,255),1)    
-        #cv2.imshow(name,z)
-        #cv2.waitKey(1)
         return z
 
 
@@ -244,6 +238,7 @@ class PulseMonitor(object):
 
             freqs = 60. * self.freqs
             idx = np.where((freqs > 50) & (freqs < 180))
+            idx = (np.array(np.clip(idx[0], 0, np.amax(self.fft))).astype(np.int64),)
             pruned = self.fft[idx]
             phase = phase[idx]
 
