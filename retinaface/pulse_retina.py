@@ -211,13 +211,12 @@ class PulseMonitor(object):
         self.face_thread.frame_in = self.frame_out
         detected = self.face_thread.detected
         
-        
         if len(detected) > 0:
             detected = list(map(int, np.clip(detected, 0, None)))
 
             w = int(detected[2] - detected[0])
             h = int(detected[3] - detected[1])
-            if self.shift(detected[:4]) > 7:
+            if self.shift(detected[:4]) > 5:
                 self.face_rect = [detected[0], detected[1], w, h]
 
             cv2.circle(self.frame_out, (detected[5], detected[6]), 1, (0, 0, 255), 4) # left eye
@@ -300,21 +299,3 @@ class PulseMonitor(object):
             _h, _w, _c = np.shape(plot)
             self.frame_out[-_h:, :_w, :_c] = plot
 
-
-if __name__ == "__main__":
-
-    processor = PulseMonitor()
-
-    cap = cv2.VideoCapture(0)
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        
-        try:
-            output_frame = processor.process_frame(frame)
-        except Exception as e:
-            traceback.print_exc()
-
-        cv2.imshow("Frame", output_frame)
-        cv2.waitKey(1)
