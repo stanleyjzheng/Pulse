@@ -2,13 +2,15 @@
     Apologies for the messy code - 'tis a hackathon afterall.
 '''
 from retinaface.model import Detector
+from threading import Thread
 import numpy as np
 import traceback
+import pylab
 import time
 import cv2
-import pylab
-import os
 import sys
+import os
+
 
 def combine(left, right):
     """Stack images horizontally.
@@ -29,6 +31,28 @@ def combine(left, right):
     
     return comb   
 
+
+class FaceDetector(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.detector = Detector()
+        self.frame_in = np.ones((255, 255, 3))
+        self.detected = []
+        self.last_detected = []
+        self.detection_times = []
+        self.avg = 1
+
+    def run(self):
+        while True:
+            self.last_detected = self.detected
+            self.t1 = time.time()
+            detected = self.detector(self.frame_in)
+            if len(detected) > 0:
+                self.detected = detected[0].tolist()
+                self.detection_times.append(time.time() - self.t1)
+                self.avg = sum(self.detection_times) / max(len(self.detection_times), 1)
+
+
 class PulseMonitor(object):
 
     def __init__(self):
@@ -47,8 +71,10 @@ class PulseMonitor(object):
         self.t0 = time.time()
         self.bpms = []
         self.bpm = 0
+        self.face_thread = FaceDetector()
+        self.face_thread.start()
 
-        self.face_detector = Detector()
+        #self.face_detector = Detector()
 
         self.face_rect = [1, 1, 2, 2]
         self.last_center = np.array([0, 0])
@@ -182,34 +208,31 @@ class PulseMonitor(object):
         self.times.append(time.time() - self.t0)
         self.frame_out = self.frame_in
         self.gray = cv2.equalizeHist(cv2.cvtColor(self.frame_in, cv2.COLOR_BGR2GRAY))
-        col = (100, 255, 100)
-
-        detected = self.face_detector(self.frame_in).tolist()
-
+        self.face_thread.frame_in = self.frame_out
+        detected = self.face_thread.detected
+        
+        
         if len(detected) > 0:
-            w = int(detected[0][2] - detected[0][0])
-            h = int(detected[0][3] - detected[0][1])
-            if self.shift(detected[0][:4]) > 4:
-                self.face_rect = list(map(int, [detected[0][0], detected[0][1], w, h]))
+            detected = list(map(int, np.clip(detected, 0, None)))
 
-            b = list(map(int, detected[0]))
-            cv2.circle(self.frame_out, (b[5], b[6]), 1, (0, 0, 255), 4) # left eye
-            cv2.circle(self.frame_out, (b[7], b[8]), 1, (0, 255, 255), 4) # right eye
-            cv2.circle(self.frame_out, (b[9], b[10]), 1, (255, 0, 255), 4) # nose
-            cv2.circle(self.frame_out, (b[11], b[12]), 1, (0, 255, 0), 4) # left mouth
-            cv2.circle(self.frame_out, (b[13], b[14]), 1, (255, 0, 0), 4) # right mouth
+            w = int(detected[2] - detected[0])
+            h = int(detected[3] - detected[1])
+            if self.shift(detected[:4]) > 7:
+                self.face_rect = [detected[0], detected[1], w, h]
 
-        forehead1 = self.get_subface_coord(0.5, 0.18, 0.25, 0.15)
+            cv2.circle(self.frame_out, (detected[5], detected[6]), 1, (0, 0, 255), 4) # left eye
+            cv2.circle(self.frame_out, (detected[7], detected[8]), 1, (0, 255, 255), 4) # right eye
+            cv2.circle(self.frame_out, (detected[9], detected[10]), 1, (255, 0, 255), 4) # nose
+            cv2.circle(self.frame_out, (detected[11], detected[12]), 1, (0, 255, 0), 4) # left mouth
+            cv2.circle(self.frame_out, (detected[13], detected[14]), 1, (255, 0, 0), 4) # right mouth
+
+        forehead1 = self.get_subface_coord(0.5, 0.25, 0.25, 0.15)
         self.draw_rect(self.face_rect, col=(100, 255, 100))
-        x, y, w, h = self.face_rect
         self.draw_rect(forehead1)
         x, y, w, h = forehead1
 
         if set(self.face_rect) == set([1, 1, 2, 2]):
             return
-
-        forehead1 = self.get_subface_coord(0.5, 0.18, 0.25, 0.15)
-        self.draw_rect(forehead1)
 
         vals = self.get_subface_means(forehead1)
 
@@ -228,7 +251,7 @@ class PulseMonitor(object):
 
             self.fps = float(L) / (self.times[-1] - self.times[0])
             even_times = np.linspace(self.times[0], self.times[-1], L)
-            interpolated = np.interp(even_times, self.times[:len(even_times)], processed)
+            interpolated = np.interp(even_times, self.times[:len(even_times)], processed[:len(even_times)])
             interpolated = np.hamming(L) * interpolated
             interpolated = interpolated - np.mean(interpolated)
             raw = np.fft.rfft(interpolated)
@@ -256,7 +279,7 @@ class PulseMonitor(object):
             self.bpm = self.freqs[idx2]
             self.idx += 1
 
-            x, y, w, h = self.get_subface_coord(0.5, 0.18, 0.25, 0.15)
+            x, y, w, h = self.get_subface_coord(0.5, 0.25, 0.25, 0.15)
             r = alpha * self.frame_in[y:y + h, x:x + w, 0]
             g = alpha * self.frame_in[y:y + h, x:x + w, 1] + beta * self.gray[y:y + h, x:x + w]
             b = alpha * self.frame_in[y:y + h, x:x + w, 2]
