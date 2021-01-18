@@ -64,6 +64,9 @@ As a caveat, it shouldn't come as a surprise that DIY heart rate tracking apps d
 So much goes on underneath the skin that is hard to see with the naked eye. While it's much easier for computers to do the same, they have their own challenges to overcome, too.
 If you're just looking for a high-level overview of your heart rate, it's hard to beat the convenience that this low-cost, non-invasive and safe video technique provides. 
 
+To learn more about our project along with key concepts and terminology, check out our website here: 
+<http://pulse-it.glitch.me/>
+
 ### How We Went About Measuring Heart Rate
 
 
