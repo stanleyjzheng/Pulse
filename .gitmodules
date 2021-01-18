@@ -1,0 +1,3 @@
+[submodule "SigmoidHacks"]
+	path = SigmoidHacks
+	url = https://github.com/ceruleanox/SigmoidHacks.git
